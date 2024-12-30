@@ -519,7 +519,11 @@ export async function createAgent(
             getSecret(character, "NEAR_WALLET_SECRET_KEY")
                 ? nearPlugin
                 : null,
-            evmPlugin,
+            getSecret(character, "EVM_PUBLIC_KEY") ||
+            (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+                ? evmPlugin
+                : null,
             (getSecret(character, "SOLANA_PUBLIC_KEY") ||
                 (getSecret(character, "WALLET_PUBLIC_KEY") &&
                     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
