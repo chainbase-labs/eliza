@@ -519,11 +519,7 @@ export async function createAgent(
             getSecret(character, "NEAR_WALLET_SECRET_KEY")
                 ? nearPlugin
                 : null,
-            getSecret(character, "EVM_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? evmPlugin
-                : null,
+            evmPlugin,
             (getSecret(character, "SOLANA_PUBLIC_KEY") ||
                 (getSecret(character, "WALLET_PUBLIC_KEY") &&
                     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
@@ -535,7 +531,7 @@ export async function createAgent(
                 ? nftGenerationPlugin
                 : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
-            chainbasePlugin,
+            getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
             getSecret(character, "COINBASE_COMMERCE_KEY")
                 ? coinbaseCommercePlugin
                 : null,
