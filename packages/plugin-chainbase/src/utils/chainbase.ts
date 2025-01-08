@@ -44,10 +44,10 @@ export async function generateSQL(prompt: string): Promise<string> {
     }
 }
 
-const POLL_INTERVAL = 1000; // 1秒
-const MAX_RETRIES = 30; // 最大重试次数
+const POLL_INTERVAL = 1000; // 1 second
+const MAX_RETRIES = 30; // Maximum number of retries
 
-// 添加新的工具函数
+// Add new utility function
 function getChainbaseApiKey(): string {
     const apiKey = process.env.CHAINBASE_API_KEY;
     if (!apiKey) {
@@ -62,13 +62,13 @@ export async function executeQuery(sql: string): Promise<any> {
     try {
         const apiKey = getChainbaseApiKey();
 
-        // 处理 SQL 中的换行符和分号
+        // Process SQL line breaks and semicolons
         const processedSql = sql
-            .replace(/\n/g, " ") // 替换换行符为空格
-            .replace(/;/g, "") // 移除分号
+            .replace(/\n/g, " ") // Replace line breaks with spaces
+            .replace(/;/g, "") // Remove semicolons
             .trim();
 
-        // 1. 执行查询
+        // 1. Execute query
         elizaLogger.log("Executing Chainbase query:", processedSql);
         const executeResponse = await fetch(
             `${CHAINBASE_API_URL_ENDPOINT}/api/v1/query/execute`,
@@ -90,7 +90,7 @@ export async function executeQuery(sql: string): Promise<any> {
             throw new Error("Failed to get execution_id from query execution");
         }
 
-        // 2. 轮询获取结果
+        // 2. Poll for results
         let retries = 0;
         while (retries < MAX_RETRIES) {
             elizaLogger.log(
@@ -110,14 +110,14 @@ export async function executeQuery(sql: string): Promise<any> {
             const response = await resultResponse.json();
             elizaLogger.log("Poll response:", response);
 
-            // 如果查询失败，立即返回错误
+            // If query fails, return error immediately
             if (response.data.status === "FAILED") {
                 throw new Error(
                     response.data.message || "Query failed with unknown error"
                 );
             }
 
-            // 如果查询完成，返回结果
+            // If query completes, return results
             if (response.data.status === "FINISHED") {
                 elizaLogger.log("Query succeeded:", response.data);
                 return {
@@ -127,7 +127,7 @@ export async function executeQuery(sql: string): Promise<any> {
                 };
             }
 
-            // 等待指定时间后继续查询
+            // Wait specified interval before polling again
             await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL));
             retries++;
         }
@@ -167,7 +167,7 @@ export async function getTokenBalances(
 
         elizaLogger.log("Token balances retrieved:", data);
 
-        // 过滤掉没有名称和符号的代币
+        // Filter out tokens without name and symbol
         return data.filter(
             (token) => !(token.name.length === 0 && token.symbol.length === 0)
         );
@@ -178,6 +178,11 @@ export async function getTokenBalances(
 }
 
 export function formatTokenBalance(token: TokenWithBalance): string {
-    const balance = parseFloat(token.balance) / Math.pow(10, token.decimals);
+    // Handle balance in hex format
+    const balanceValue = token.balance.startsWith("0x")
+        ? parseInt(token.balance, 16)
+        : parseFloat(token.balance);
+
+    const balance = balanceValue / Math.pow(10, token.decimals);
     return `${balance.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${token.symbol} (${token.name})`;
 }
