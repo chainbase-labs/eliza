@@ -71,7 +71,7 @@ export async function executeQuery(sql: string): Promise<any> {
         // 1. 执行查询
         elizaLogger.log("Executing Chainbase query:", processedSql);
         const executeResponse = await fetch(
-            `${CHAINBASE_API_URL_ENDPOINT}/query/execute`,
+            `${CHAINBASE_API_URL_ENDPOINT}/api/v1/query/execute`,
             {
                 method: "POST",
                 headers: {
@@ -97,7 +97,7 @@ export async function executeQuery(sql: string): Promise<any> {
                 `Polling results (attempt ${retries + 1}/${MAX_RETRIES})...`
             );
             const resultResponse = await fetch(
-                `${CHAINBASE_API_URL_ENDPOINT}/execution/${executionId}/results`,
+                `${CHAINBASE_API_URL_ENDPOINT}/api/v1/execution/${executionId}/results`,
                 {
                     method: "GET",
                     headers: {
@@ -148,7 +148,7 @@ export async function getTokenBalances(
         elizaLogger.log("Fetching token balances:", params);
 
         const response = await fetch(
-            `${CHAINBASE_API_URL_ENDPOINT}/account/tokens?chain_id=${params.chain_id}&address=${params.address}&limit=100`,
+            `${CHAINBASE_API_URL_ENDPOINT}/v1/account/tokens?chain_id=${params.chain_id}&address=${params.address}&limit=100`,
             {
                 method: "GET",
                 headers: {

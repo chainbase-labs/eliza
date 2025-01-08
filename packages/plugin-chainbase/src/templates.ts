@@ -4,6 +4,17 @@ Extract query parameters for fetching all erc20 token balance for a wallet addre
 - **chain_id** (string, optional): Specify The chain on which token bases.
 - **contract_address** (string, optional): Specify one token contract address to check of.
 
+Supported chains and their chain IDs:
+- Ethereum (chain_id: "1")
+- Polygon (chain_id: "137")
+- BSC (chain_id: "56")
+- Avalanche (chain_id: "43114")
+- Arbitrum One (chain_id: "42161")
+- Optimism (chain_id: "10")
+- Base (chain_id: "8453")
+- zkSync (chain_id: "324")
+- Merlin (chain_id: "4200")
+
 Provide the details in the following JSON format:
 \`\`\`json
 {
@@ -12,7 +23,6 @@ Provide the details in the following JSON format:
     "contract_address"?: "<string>",
 }
 \`\`\`
-
 
 Example for reading the balance of an ERC20 token:
 \`\`\`json
