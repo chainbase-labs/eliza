@@ -9,7 +9,7 @@ import {
     composeContext,
     generateObject,
 } from "@elizaos/core";
-import { getTokenBalances, formatTokenBalance } from "../utils/chainbase";
+import { getTokenBalances, formatTokenBalance } from "../libs/chainbase";
 import { retrieveTokenBalanceTemplate } from "../templates";
 import {
     RetrieveTokenBalanceReqSchema,
@@ -87,7 +87,12 @@ export const retrieveTokenBalance: Action = {
 
             if (tokens.length > 0) {
                 callback({
-                    text: tokens.map(formatTokenBalance).join("\n"),
+                    text: `Token holdings for address ${address} on Ethereum Chain:<br><br>${tokens
+                        .map(
+                            (token, index) =>
+                                `${index + 1}. ${formatTokenBalance(token)}`
+                        )
+                        .join("<br>")}`,
                 });
             } else {
                 callback({
@@ -107,7 +112,7 @@ export const retrieveTokenBalance: Action = {
             {
                 user: "user",
                 content: {
-                    text: "Retrieve all token balances of address 0x7719fD6A5a951746c8c26E3DFd143f6b96Db6412",
+                    text: "Retrieve Ethereum token balances of address 0x7719fD6A5a951746c8c26E3DFd143f6b96Db6412",
                     action: "RETRIEVE_TOKEN_BALANCE",
                 },
             },

@@ -5,21 +5,28 @@ import {
     State,
     HandlerCallback,
     elizaLogger,
+    generateText,
+    ModelClass,
 } from "@elizaos/core";
-import { generateSQL, executeQuery } from "../utils/chainbase";
+import { generateSQL, executeQuery } from "../libs/chainbase";
+import { responsePrompt } from "../templates";
+
+const QUERY_PREFIX = "query onchain data:";
 
 export const queryBlockChainData: Action = {
     name: "QUERY_BLOCKCHAIN_DATA",
-    similes: ["ANALYZE_BLOCKCHAIN", "GET_CHAIN_DATA"],
-    description: "Query blockchain data using natural language",
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-        elizaLogger.log("Validating runtime for RETRIEVE_TOKEN_BALANCE...");
+    similes: ["ANALYZE_BLOCKCHAIN", "GET_CHAIN_DATA", "QUERY_ONCHAIN_DATA"],
+    description:
+        "Query blockchain data using natural language starting with 'query onchain data:'",
 
+    validate: async (runtime: IAgentRuntime, message: Memory) => {
+        elizaLogger.log("Validating runtime for QUERY_BLOCKCHAIN_DATA...");
         return !!(
             runtime.character.settings.secrets?.CHAINBASE_API_KEY ||
             process.env.CHAINBASE_API_KEY
         );
     },
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -28,68 +35,190 @@ export const queryBlockChainData: Action = {
         callback?: HandlerCallback
     ) => {
         try {
+            const messageText = message.content.text.toLowerCase();
+
+            if (!messageText.includes(QUERY_PREFIX)) {
+                callback({
+                    text: `Please use the format: ${QUERY_PREFIX} <your natural language query>`,
+                });
+                return;
+            }
+
+            const queryText = message.content.text
+                .slice(
+                    message.content.text.toLowerCase().indexOf(QUERY_PREFIX) +
+                        QUERY_PREFIX.length
+                )
+                .trim();
+
+            if (!queryText) {
+                callback({
+                    text: `Please provide a specific query after '${QUERY_PREFIX}'`,
+                });
+                return;
+            }
+
             // Generate SQL from natural language
-            const sql = await generateSQL(message.content.text);
+            const sql = await generateSQL(queryText);
 
             // Execute query on Chainbase
             const result = await executeQuery(sql);
 
-            // Format the results in a more readable way
-            let formattedResponse = `📊 Query Results\n\n`;
-            formattedResponse += `🔍 SQL Query:\n${sql}\n\n`;
-
-            if (result.columns && result.data) {
-                formattedResponse += `📋 Data:\n`;
-
-                // Create a table header
-                const headers = result.columns.map(
-                    (col: any) => col.name || "Column"
-                );
-
-                // Format each row of data
-                const rows = result.data.map((row: any[]) => {
-                    return row.map((value: any) => {
-                        if (typeof value === "number") {
-                            // Format numbers with commas and up to 4 decimal places
-                            return Number(value).toLocaleString(undefined, {
-                                maximumFractionDigits: 4,
-                            });
-                        }
-                        return String(value);
-                    });
-                });
-
-                // Create table-like format
-                const table = [headers, ...rows]
-                    .map((row) => `| ${row.join(" | ")} |`)
-                    .join("\n");
-
-                formattedResponse += `\n${table}\n`;
-
-                // Add total rows if available
-                if (result.totalRows) {
-                    formattedResponse += `\n📈 Total Rows: ${result.totalRows}`;
-                }
-            } else {
-                formattedResponse += `No data returned from query.`;
-            }
-
-            callback({
-                text: formattedResponse,
+            // Use generateText to format the response
+            const formattedResponse = await generateText({
+                runtime,
+                context: responsePrompt(
+                    {
+                        sql,
+                        columns: result.columns,
+                        data: result.data,
+                        totalRows: result.totalRows,
+                    },
+                    queryText
+                ),
+                modelClass: ModelClass.SMALL,
             });
+
+            return formattedResponse;
         } catch (error) {
             elizaLogger.error("Error in queryChainbase action:", error);
-            callback({
-                text: `❌ Error: ${error instanceof Error ? error.message : "An unknown error occurred while querying the blockchain data."}\n\nPlease try rephrasing your question.`,
-            });
+            return "error";
         }
     },
+
     examples: [
         [
             {
-                user: "{{user1}}",
+                user: "user",
                 content: {
-                    text: "Calculate the average transaction gas used within per block on ETH in the past 1 minute.",
+                    text: "query onchain data: Calculate the average gas used per block on Ethereum in the last 100 blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: Show me the top 10 active Ethereum addresses by transaction count in the last 1000 blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: List Ethereum transactions with value greater than 1 ETH in the last 1000 blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: Calculate the total ETH transaction fees collected in the last 100 Ethereum blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: Show me the distribution of ETH transaction values in the last 1000 Ethereum transactions",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: Find Ethereum blocks that have more than 200 transactions in the last 24 hours",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: What's the average gas price trend on Ethereum mainnet in the last 1000 blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: Show me Ethereum addresses that have both sent and received ETH in the last 100 blocks",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "query onchain data: List the top 10 Ethereum blocks by total gas used in the last 24 hours",
+                    action: "QUERY_BLOCKCHAIN_DATA",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "📊 Query Results...",
                 },
             },
         ],

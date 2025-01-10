@@ -1,1 +1,1 @@
-export const CHAINBASE_API_URL_ENDPOINT = "https://api.chainbase.online";
+export const CHAINBASE_API_URL_ENDPOINT = "https://api.chainbase.com";

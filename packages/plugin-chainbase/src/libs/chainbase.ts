@@ -17,23 +17,27 @@ export interface TokenBalanceParams {
 
 export async function generateSQL(prompt: string): Promise<string> {
     try {
-        const response = await fetch("http://127.0.0.1:8000/runs/wait", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                assistant_id: "6b86c502-d203-4f6b-baf6-f406c23a9421",
-                input: {
-                    messages: [
-                        {
-                            type: "human",
-                            content: prompt,
-                        },
-                    ],
+        const response = await fetch(
+            // `${CHAINBASE_API_URL_ENDPOINT}/api/v1/text2sql`,
+            "http://127.0.0.1:8000/runs/wait",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            }),
-        });
+                body: JSON.stringify({
+                    assistant_id: "6b86c502-d203-4f6b-baf6-f406c23a9421",
+                    input: {
+                        messages: [
+                            {
+                                type: "human",
+                                content: prompt,
+                            },
+                        ],
+                    },
+                }),
+            }
+        );
 
         const data = await response.json();
         elizaLogger.log("Generated SQL:", data.sql);
@@ -45,7 +49,7 @@ export async function generateSQL(prompt: string): Promise<string> {
 }
 
 const POLL_INTERVAL = 1000; // 1 second
-const MAX_RETRIES = 30; // Maximum number of retries
+const MAX_RETRIES = 180; // Maximum number of retries (3 minute)
 
 // Add new utility function
 function getChainbaseApiKey(): string {
@@ -132,7 +136,7 @@ export async function executeQuery(sql: string): Promise<any> {
             retries++;
         }
 
-        throw new Error("Query timeout after 30 seconds");
+        throw new Error("Query timeout after 180 seconds");
     } catch (error) {
         elizaLogger.error("Error executing Chainbase query:", error);
         throw error;
