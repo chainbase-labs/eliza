@@ -41,6 +41,7 @@ import {
     tradePlugin,
     webhookPlugin,
 } from "@elizaos/plugin-coinbase";
+import { chainbasePlugin } from "@elizaos/plugin-chainbase";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { storyPlugin } from "@elizaos/plugin-story";
@@ -534,6 +535,7 @@ export async function createAgent(
                 ? nftGenerationPlugin
                 : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
+            getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
             getSecret(character, "COINBASE_COMMERCE_KEY")
                 ? coinbaseCommercePlugin
                 : null,
