@@ -1,9 +1,10 @@
 import { Plugin } from "@elizaos/core";
 import { retrieveTokenBalance } from "./actions/retrieveTokenBalance";
-import { queryBlockChainData } from "./actions/queryData";
+import { ChainbaseService } from "./services/ChainbaseService";
+
 export const chainbasePlugin: Plugin = {
     name: "chainbase",
     description: "Chainbase Plugin for Eliza",
-    actions: [retrieveTokenBalance, queryBlockChainData],
-    providers: [],
+    actions: [retrieveTokenBalance],
+    services: [new ChainbaseService()],
 };
